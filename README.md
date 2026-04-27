@@ -11,32 +11,50 @@ This guide walks you through setting up a GitOps pipeline on a single EC2 instan
 
 ---
 
-## Architecture (Phase 1)
+## Architecture
 
+```mermaid
+flowchart LR
+  classDef user    fill:#ECEFF1,stroke:#546E7A,color:#000,stroke-width:2px
+  classDef ext     fill:#FFFFFF,stroke:#24292E,color:#000,stroke-width:2px
+  classDef docker  fill:#E3F2FD,stroke:#2496ED,color:#000,stroke-width:2px
+  classDef argo    fill:#EF7B4D,stroke:#B85525,color:#FFFFFF,stroke-width:2px
+  classDef pod     fill:#326CE5,stroke:#1A4FA8,color:#FFFFFF,stroke-width:2px
+  classDef svc     fill:#5A8DEE,stroke:#1A4FA8,color:#FFFFFF,stroke-width:2px
+
+  Dev["👨‍💻 Developer<br/>(Laptop)"]:::user
+  Browser["🌐 Browser"]:::user
+  GH[("🐙 GitHub Repo<br/>k8s/deployment.yaml<br/>k8s/service.yaml")]:::ext
+  DH[("🐳 Docker Hub<br/>gitops-demo:v1")]:::docker
+
+  subgraph EC2["☁️ AWS EC2 — Ubuntu 22.04 · SG: 22 / 30080 / 30090"]
+    direction TB
+    subgraph Dock["Docker Engine"]
+      direction TB
+      subgraph Kind["kind cluster (control-plane)"]
+        direction LR
+        subgraph NSArgo["namespace: argocd"]
+          ArgoSrv["argocd-server<br/>Service: NodePort 30080"]:::argo
+        end
+        subgraph NSDef["namespace: default"]
+          NgDeploy["nginx Deployment<br/>(2 pods)<br/><br/>Phase 1: nginx:1.27<br/>Phase 2: gitops-demo:v1"]:::pod
+          NgSvc["nginx Service<br/>NodePort 30090<br/>selector: app=nginx"]:::svc
+        end
+      end
+    end
+  end
+
+  Dev -->|"git push (manifests)"| GH
+  Dev -->|"docker build & push"| DH
+  ArgoSrv -.->|"poll & pull manifests"| GH
+  ArgoSrv -->|"kubectl apply (sync)"| NgDeploy
+  NgDeploy -.->|"pull image (rollout)"| DH
+  NgSvc -->|"selects pods"| NgDeploy
+  Browser -->|"HTTP :30080 (ArgoCD UI)"| ArgoSrv
+  Browser -->|"HTTP :30090 (Demo page)"| NgSvc
 ```
-   Your Laptop / Browser
-            │
-            │  HTTP (ports 30080, 30090)
-            ▼
-   ┌────────────────────────┐
-   │  EC2 (Ubuntu 22.04)    │
-   │                        │
-   │   Docker               │
-   │   └── kind cluster     │
-   │        ├── ArgoCD ns   │── argocd-server (NodePort 30080)
-   │        └── default ns  │── nginx (NodePort 30090)
-   │                        │
-   └────────────────────────┘
-            ▲
-            │  pulls manifests
-            │
-   ┌────────────────────────┐
-   │  GitHub (public repo)  │
-   │  └── k8s/              │
-   │       ├── deployment.yaml
-   │       └── service.yaml │
-   └────────────────────────┘
-```
+
+**Legend** — solid arrow = active push/apply · dashed arrow = poll/pull · orange = ArgoCD/AWS · blue = Kubernetes/Docker
 
 **Why this shape?** kind runs Kubernetes nodes as Docker containers. To reach services running inside kind from outside the EC2 box, we use kind's `extraPortMappings` to forward EC2 host ports → kind node ports → Kubernetes NodePort services.
 
@@ -601,7 +619,8 @@ You never ran `kubectl apply` for any of it. **That is GitOps.**
 
 ## File Index in This Repo
 
-- `README.md` — this guide
+- `README.md` — this guide (Mermaid architecture diagram included at the top)
+- `architecture.md` — standalone copy of the Mermaid diagram (detailed + simplified versions)
 - `kind-config.yaml` — kind cluster definition with port mappings
 - `argocd-app.yaml` — ArgoCD Application pointing at your GitHub repo (Option B / YAML)
 - `k8s/deployment.yaml` — Nginx Deployment (Phase 1: stock image · Phase 2: your custom image)
