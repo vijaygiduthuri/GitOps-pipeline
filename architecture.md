@@ -59,7 +59,7 @@ flowchart LR
 
 ## Simpler one-liner version
 
-For slides or a 30-second explanation:
+
 
 ```mermaid
 flowchart LR
@@ -71,9 +71,3 @@ flowchart LR
 
 ---
 
-## How to view / export
-
-- **VS Code:** install the *Markdown Preview Mermaid Support* extension, then open this file and `Ctrl+Shift+V` to preview
-- **GitHub:** the diagram renders automatically in any `.md` file pushed to a public repo
-- **Live editor:** paste the code block into https://mermaid.live to tweak and export PNG / SVG
-- **Inside slides:** export as PNG from mermaid.live, or use the *Mermaid* plugin for Notion / Obsidian / Confluence
