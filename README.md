@@ -608,22 +608,4 @@ You never ran `kubectl apply` for any of it. **That is GitOps.**
 
 ---
 
-## What's Next — Phase 3 (Preview)
 
-- Add **ArgoCD Image Updater** so ArgoCD auto-bumps the image tag when a new build lands (no manual edit to `deployment.yaml`)
-- Add a **CI pipeline** (GitHub Actions) that builds & pushes the image on every commit to `main`
-- Add an **Ingress Controller** (e.g., NGINX Ingress) instead of NodePort for proper hostnames
-- Move from a single-node kind to a real **EKS** cluster
-
----
-
-## File Index in This Repo
-
-- `README.md` — this guide (Mermaid architecture diagram included at the top)
-- `architecture.md` — standalone copy of the Mermaid diagram (detailed + simplified versions)
-- `kind-config.yaml` — kind cluster definition with port mappings
-- `argocd-app.yaml` — ArgoCD Application pointing at your GitHub repo (Option B / YAML)
-- `k8s/deployment.yaml` — Nginx Deployment (Phase 1: stock image · Phase 2: your custom image)
-- `k8s/service.yaml` — NodePort Service on `30090` (unchanged across phases)
-- `containerisation/Dockerfile` — builds the Phase 2 custom image
-- `containerisation/index.html` — animated GitOps demo page baked into the image
